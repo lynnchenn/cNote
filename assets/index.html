@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="paper" data-mode="split" data-gutter="0">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cNote</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="markdown.css">
+  <link rel="stylesheet" href="highlight.css">
+</head>
+<body>
+
+<div id="fatal" style="display:none;position:fixed;inset:0;z-index:999;padding:28px;
+  font:13px/1.7 Consolas,monospace;background:#1b1c20;color:#ffb4b4;white-space:pre-wrap;overflow:auto"></div>
+<script>
+  (function () {
+    function report(kind, message, where) {
+      var box = document.getElementById('fatal');
+      box.style.display = 'block';
+      box.textContent += kind + ': ' + message + (where ? '  @ ' + where : '') + '\n';
+      try {
+        window.chrome.webview.postMessage(JSON.stringify({
+          id: 0, cmd: 'log', data: { line: kind + ': ' + message + (where ? ' @ ' + where : '') },
+        }));
+      } catch (error) { /* 启动早期宿主尚不可用 */ }
+    }
+
+    window.addEventListener('error', function (event) {
+      report('ERROR', event.message, (event.filename || '') + ':' + event.lineno);
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      report('REJECTION', String(event.reason && event.reason.message || event.reason));
+    });
+  })();
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M10 5v14"/></symbol>
+    <symbol id="i-new" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9.5 3.5h5v3.2l3 3.3v1.5H6.5V10l3-3.3z"/><path d="M12 11.5v9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.5-3.3 1.8 1.8 0 0 1 1.3-3H17a4 4 0 0 0 4-4c0-4.4-4-7.7-9-7.7z"/><path d="M7.5 11.5h.01M10 8h.01M14 8h.01"/></symbol>
+    <symbol id="i-min" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+    <symbol id="i-max" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><rect x="8" y="8" width="10" height="10" rx="1.5"/><path d="M6 16V6h10"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 6h5l2 2h9v10H4z"/></symbol>
+    <symbol id="i-outline" viewBox="0 0 24 24"><path d="M4 6h4M4 12h9M4 18h6M14 6h6M17 12h3M14 18h6"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.4v.5M12 16.6h.01"/></symbol>
+    <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></symbol>
+    <symbol id="i-italic" viewBox="0 0 24 24"><path d="M10 5h7M7 19h7M14.5 5l-5 14"/></symbol>
+    <symbol id="i-strike" viewBox="0 0 24 24"><path d="M4 12h16M16.5 7.2C15.7 6 14 5.2 12 5.2c-2.6 0-4.3 1.3-4.3 3.2 0 .9.4 1.7 1.2 2.2M7.6 16.5c.9 1.5 2.6 2.3 4.6 2.3 2.7 0 4.5-1.3 4.5-3.3 0-.7-.2-1.4-.7-2"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 24 24"><path d="M9 14.5l-3 3V20h3l3-3M13.2 6.2l4.6 4.6-5.2 5.2-4.6-4.6z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 6.5L3.5 12l5 5.5M15.5 6.5l5 5.5-5 5.5"/></symbol>
+    <symbol id="i-codeblock" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M9.5 9.5l-2.5 2.5 2.5 2.5M14.5 9.5l2.5 2.5-2.5 2.5"/></symbol>
+    <symbol id="i-h1" viewBox="0 0 24 24"><path d="M4 6v12M11 6v12M4 12h7M15.5 10.5L18 9v10"/></symbol>
+    <symbol id="i-h2" viewBox="0 0 24 24"><path d="M3 6v12M10 6v12M3 12h7M14.5 10.3a2 2 0 1 1 3.6 1.4L14.5 18H19"/></symbol>
+    <symbol id="i-h3" viewBox="0 0 24 24"><path d="M3 6v12M10 6v12M3 12h7M14.5 9.6a2 2 0 1 1 2.2 2.6 2 2 0 1 1-2.2 2.7"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24"><path d="M6.5 8.5h4.5v4a4 4 0 0 1-4 4M13.5 8.5H18v4a4 4 0 0 1-4 4"/></symbol>
+    <symbol id="i-ul" viewBox="0 0 24 24"><path d="M5 7h.01M5 12h.01M5 17h.01M9 7h10M9 12h10M9 17h10"/></symbol>
+    <symbol id="i-ol" viewBox="0 0 24 24"><path d="M3.5 6h1.4v4M3.5 10h3M3.5 13.2h2.2a1.4 1.4 0 0 1 0 2.6H5.8a1.4 1.4 0 0 1 0 2.6H3.5M10 7h10M10 12h10M10 17h10"/></symbol>
+    <symbol id="i-task" viewBox="0 0 24 24"><path d="M4 6.5l1.8 1.8L9 5M4 16.5l1.8 1.8L9 15M11.5 7.5h8.5M11.5 17.5h8.5"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/><path d="M4 10.5h16M10 6v12M15.5 6v12"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.5 13.5a3.6 3.6 0 0 1 0-5.1l2-2a3.6 3.6 0 0 1 5.1 5.1l-.9.9M13.5 10.5a3.6 3.6 0 0 1 0 5.1l-2 2a3.6 3.6 0 0 1-5.1-5.1l.9-.9"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M4 16l4-4 3 3 4-5 5 6"/><path d="M9 10.5h.01"/></symbol>
+    <symbol id="i-hr" viewBox="0 0 24 24"><path d="M4 12h16"/></symbol>
+    <symbol id="i-math" viewBox="0 0 24 24"><path d="M5 17.5c2.5 0 2-3.5 3.5-9S11 4.5 13 4.5M5 9h5M15 11.5l4.5 7M19.5 11.5l-4.5 7"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h9a5 5 0 0 1 0 10H8M4 9l4-4M4 9l4 4"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 9h-9a5 5 0 0 0 0 10h5M20 9l-4-4M20 9l-4 4"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4M5 19.5h14"/></symbol>
+    <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 17v-4h1a2 2 0 0 1 0 4h-1zM14 17v-4h2M14 15h1.5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="10" height="10" rx="1.5"/><path d="M5 15V5h10"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.2 6M20 5v6h-6"/></symbol>
+    <symbol id="i-write" viewBox="0 0 24 24"><path d="M4 19.5h4L18.5 9 15 5.5 4.5 15.5z"/><path d="M14 6.5l3.5 3.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+
+  <header class="titlebar" id="titlebar">
+    <div class="brand">
+      <img class="logo" src="logo.png" alt="">
+      <span>cNote</span>
+    </div>
+    <button class="ibtn" id="btnSidebar" title="切换侧边栏  (Ctrl+\)"><svg class="icon"><use href="#i-sidebar"/></svg></button>
+    <div class="tb-drag" id="tbDrag"></div>
+    <div class="tb-actions">
+      <div class="segmented" id="viewSwitch">
+        <button data-mode="edit" title="源码模式  (Ctrl+1)">编辑</button>
+        <button data-mode="split" title="分栏模式  (Ctrl+2)">分栏</button>
+        <button data-mode="read" title="阅读模式  (Ctrl+3)">阅读</button>
+      </div>
+      <button class="ibtn" id="btnFind" title="查找 / 替换  (Ctrl+F)"><svg class="icon"><use href="#i-search"/></svg></button>
+      <button class="ibtn" id="btnTheme" title="主题"><svg class="icon"><use href="#i-palette"/></svg></button>
+      <button class="ibtn" id="btnExport" title="导出"><svg class="icon"><use href="#i-export"/></svg></button>
+      <span class="tb-sep"></span>
+      <button class="ibtn" id="btnTopmost" title="窗口置顶"><svg class="icon"><use href="#i-pin"/></svg></button>
+      <span class="tb-sep"></span>
+    </div>
+    <div class="win-buttons">
+      <button id="winMin" title="最小化"><svg class="icon icon-sm"><use href="#i-min"/></svg></button>
+      <button id="winMax" title="最大化 / 还原"><svg class="icon icon-sm" id="winMaxIcon"><use href="#i-max"/></svg></button>
+      <button id="winClose" class="close" title="关闭"><svg class="icon icon-sm"><use href="#i-close"/></svg></button>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="activity" id="activity">
+      <button class="abtn" data-panel="files" title="文件"><svg class="icon"><use href="#i-folder"/></svg></button>
+      <button class="abtn is-on" data-panel="outline" title="大纲"><svg class="icon"><use href="#i-outline"/></svg></button>
+      <button class="abtn" data-panel="settings" title="设置"><svg class="icon"><use href="#i-settings"/></svg></button>
+      <div class="spacer"></div>
+      <button class="abtn" id="btnHelp" title="快捷键  (F1)"><svg class="icon"><use href="#i-help"/></svg></button>
+    </nav>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="panel" data-panel="files">
+        <div class="panel-head">
+          <span>文件</span>
+          <span class="grow"></span>
+          <button class="ibtn" id="btnPickFolder" title="添加文件夹" style="width:24px;height:22px"><svg class="icon icon-sm"><use href="#i-new"/></svg></button>
+          <button class="ibtn" id="btnRefreshTree" title="刷新" style="width:24px;height:22px"><svg class="icon icon-sm"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div class="tree-search">
+          <svg class="icon icon-sm"><use href="#i-search"/></svg>
+          <input type="text" id="treeSearch" placeholder="搜索文件" spellcheck="false"
+                 autocomplete="off" autocorrect="off" autocapitalize="off">
+        </div>
+        <div class="panel-body" id="fileTree"></div>
+      </div>
+
+      <div class="panel is-on" data-panel="outline">
+        <div class="panel-head"><span>大纲</span></div>
+        <div class="panel-body" id="outline"></div>
+      </div>
+
+      <div class="panel" data-panel="settings">
+        <div class="panel-head"><span>设置</span></div>
+        <div class="panel-body">
+          <div class="field">
+            <label>正文字号 <span class="value" id="valFontSize">16 px</span></label>
+            <input type="range" id="setFontSize" min="12" max="26" step="1">
+          </div>
+          <div class="field">
+            <label>行高 <span class="value" id="valLineHeight">1.75</span></label>
+            <input type="range" id="setLineHeight" min="130" max="240" step="5">
+          </div>
+          <div class="field">
+            <label>版心宽度 <span class="value" id="valContentWidth">900 px</span></label>
+            <input type="range" id="setContentWidth" min="560" max="1400" step="20">
+          </div>
+          <div class="field">
+            <label>编辑器字体</label>
+            <select id="setFontFamily">
+              <option value="'Microsoft YaHei UI','Microsoft YaHei',sans-serif">微软雅黑</option>
+              <option value="var(--font-read)">正文体</option>
+              <option value="SimSun,'Songti SC',serif">宋体</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>界面主题</label>
+            <div class="theme-grid" id="themeGrid"></div>
+          </div>
+          <div class="switch-row" id="setGutter"><span>显示行号</span><span class="switch"></span></div>
+          <div class="switch-row" id="setTypewriter"><span>打字机模式</span><span class="switch"></span></div>
+          <div class="switch-row" id="setFocus"><span>专注模式</span><span class="switch"></span></div>
+          <div class="switch-row" id="setAutoSave"><span>自动保存</span><span class="switch"></span></div>
+          <div class="field" style="padding-top:2px">
+            <div style="font-size:11.5px;color:var(--fg-faint);line-height:1.75">
+              <b style="color:var(--fg-mute)">专注模式</b>：标题栏、状态栏、侧边栏、标签页与工具栏全部收起，只剩正文。按 <kbd>F8</kbd> 或 <kbd>Esc</kbd> 退出。<br>
+              <b style="color:var(--fg-mute)">打字机模式</b>：正在输入的那一行始终停在窗口正中，视线不用跟着光标往下跑。
+            </div>
+          </div>
+          <div class="field" style="padding-top:14px">
+            <label>数据目录</label>
+            <div style="font-size:11.5px;color:var(--fg-faint);word-break:break-all" id="dataDir"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="tabbar">
+        <div class="tabs" id="tabs"></div>
+        <button class="tab-new" id="tabNew" title="新建标签  (Ctrl+N)">
+          <svg class="icon icon-sm"><use href="#i-new"/></svg>
+        </button>
+        <button class="tab-all" id="tabAll" title="所有打开的文件">
+          <svg class="icon icon-sm" style="transform:rotate(90deg)"><use href="#i-chevron"/></svg>
+        </button>
+      </div>
+
+      <div class="toolbar" id="toolbar">
+        <button class="ibtn" data-act="undo" title="撤销  (Ctrl+Z)"><svg class="icon"><use href="#i-undo"/></svg></button>
+        <button class="ibtn" data-act="redo" title="重做  (Ctrl+Y)"><svg class="icon"><use href="#i-redo"/></svg></button>
+        <span class="sep"></span>
+        <button class="ibtn" data-act="bold" title="加粗  (Ctrl+B)"><svg class="icon"><use href="#i-bold"/></svg></button>
+        <button class="ibtn" data-act="italic" title="斜体  (Ctrl+I)"><svg class="icon"><use href="#i-italic"/></svg></button>
+        <button class="ibtn" data-act="strike" title="删除线  (Ctrl+D)"><svg class="icon"><use href="#i-strike"/></svg></button>
+        <button class="ibtn" data-act="mark" title="高亮  (Ctrl+E)"><svg class="icon"><use href="#i-mark"/></svg></button>
+        <button class="ibtn" data-act="code" title="行内代码  (Ctrl+`)"><svg class="icon"><use href="#i-code"/></svg></button>
+        <button class="ibtn" data-act="codeblock" title="代码块  (Ctrl+Shift+C)"><svg class="icon"><use href="#i-codeblock"/></svg></button>
+        <span class="sep"></span>
+        <button class="ibtn" data-act="h1" title="一级标题  (Ctrl+Alt+1)"><svg class="icon"><use href="#i-h1"/></svg></button>
+        <button class="ibtn" data-act="h2" title="二级标题  (Ctrl+Alt+2)"><svg class="icon"><use href="#i-h2"/></svg></button>
+        <button class="ibtn" data-act="h3" title="三级标题  (Ctrl+Alt+3)"><svg class="icon"><use href="#i-h3"/></svg></button>
+        <button class="ibtn" data-act="quote" title="引用  (Ctrl+Alt+Q)"><svg class="icon"><use href="#i-quote"/></svg></button>
+        <span class="sep"></span>
+        <button class="ibtn" data-act="ul" title="无序列表  (Ctrl+Alt+U)"><svg class="icon"><use href="#i-ul"/></svg></button>
+        <button class="ibtn" data-act="ol" title="有序列表  (Ctrl+Alt+O)"><svg class="icon"><use href="#i-ol"/></svg></button>
+        <button class="ibtn" data-act="task" title="任务列表  (Ctrl+Alt+X)"><svg class="icon"><use href="#i-task"/></svg></button>
+        <button class="ibtn" data-act="table" title="插入表格  (Ctrl+Alt+T)"><svg class="icon"><use href="#i-table"/></svg></button>
+        <button class="ibtn" id="btnTableTools" title="表格工具：增删行列、设置对齐"><svg class="icon"><use href="#i-table"/><path d="M17 17h5M19.5 14.5v5"/></svg></button>
+        <span class="sep"></span>
+        <button class="ibtn" data-act="link" title="插入链接  (Ctrl+K)"><svg class="icon"><use href="#i-link"/></svg></button>
+        <button class="ibtn" id="btnImage" title="图片：插入 / 对齐  (Ctrl+Shift+I)"><svg class="icon"><use href="#i-image"/></svg></button>
+        <button class="ibtn" data-act="math" title="插入公式  (Ctrl+Shift+M)"><svg class="icon"><use href="#i-math"/></svg></button>
+        <button class="ibtn" data-act="hr" title="分割线"><svg class="icon"><use href="#i-hr"/></svg></button>
+        <span class="grow"></span>
+      </div>
+
+      <div class="panes" id="panes">
+        <section class="pane editor-pane" id="editorPane">
+          <div class="scroll" id="editorScroll">
+            <div class="page" id="editorPage">
+              <div class="surface" id="editor" contenteditable="plaintext-only"
+                   spellcheck="false" autocorrect="off" autocapitalize="off"
+                   role="textbox" aria-multiline="true"></div>
+            </div>
+          </div>
+        </section>
+        <div class="splitter" id="splitter"></div>
+        <section class="pane preview-pane" id="previewPane">
+          <div class="scroll preview-scroll" id="previewScroll">
+            <!-- 这两个占位元素为预览尚未绘制的那部分文档保留滚动范围；
+                 参见 layoutPreview()。 -->
+            <article class="md" id="preview"><div class="md-spacer" id="previewTop"></div><div class="md-spacer" id="previewBottom"></div></article>
+          </div>
+        </section>
+      </div>
+
+      <div class="findbar" id="findbar">
+        <div class="find-row">
+          <svg class="icon icon-sm" style="color:var(--fg-faint)"><use href="#i-search"/></svg>
+          <input id="findInput" type="text" placeholder="查找">
+          <span class="count" id="findCount">0/0</span>
+          <button class="ibtn" id="findPrev" title="上一个  (Shift+Enter)" style="width:26px;height:24px"><svg class="icon icon-sm" style="transform:rotate(-90deg)"><use href="#i-chevron"/></svg></button>
+          <button class="ibtn" id="findNext" title="下一个  (Enter)" style="width:26px;height:24px"><svg class="icon icon-sm" style="transform:rotate(90deg)"><use href="#i-chevron"/></svg></button>
+        </div>
+        <div class="find-row">
+          <!-- 让两行的输入字段彼此对齐。 -->
+          <svg class="icon icon-sm" style="visibility:hidden"><use href="#i-search"/></svg>
+          <input id="replaceInput" type="text" placeholder="替换为">
+          <button class="ibtn" id="findReplace" title="替换当前">替换</button>
+          <button class="ibtn" id="findReplaceAll" title="全部替换">全部</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="statusbar" id="statusbar">
+    <span class="item clickable" id="statusPath" title="点击复制路径">未命名</span>
+    <span class="item" id="statusEncoding"></span>
+    <span class="item" style="color:var(--accent)">Markdown</span>
+    <span class="grow"></span>
+    <span class="item" id="statusCursor">行 1, 列 1</span>
+    <span class="item" id="statusCount">0 字</span>
+    <span class="item clickable" id="statusZoom" title="重置缩放">100%</span>
+    <span class="item" id="statusMode">分栏</span>
+  </footer>
+</div>
+
+<div class="popover" id="themePopover"></div>
+<div class="popover" id="exportPopover"></div>
+<div class="popover" id="tablePopover"></div>
+<div class="popover" id="imagePopover"></div>
+<div class="ctxmenu" id="ctxmenu"></div>
+
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span>cNote 快捷键</span>
+      <span class="grow"></span>
+      <button class="ibtn" id="helpClose"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="shortcut-grid" id="shortcutGrid"></div>
+      <p class="about-line">cNote 0.1 · lynn</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="dialog">
+  <div class="modal" id="dialogBox" style="width:min(440px, calc(100vw - 60px))">
+    <div class="modal-head"><span id="dialogTitle">cNote</span></div>
+    <div class="modal-body" style="padding-bottom:6px">
+      <div id="dialogMessage" style="font-size:13px;line-height:1.85;color:var(--fg-mute);white-space:pre-wrap;word-break:break-word"></div>
+      <input type="text" id="dialogInput" spellcheck="false"
+             style="display:none;margin-top:12px;width:100%;font:inherit;font-size:13px;
+                    padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+                    background:var(--bg-sunken);color:var(--fg);outline:none">
+    </div>
+    <div class="dialog-actions" id="dialogActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="markdown.js"></script>
+<script src="highlight.js"></script>
+<script src="mathml.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

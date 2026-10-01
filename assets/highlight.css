@@ -1,0 +1,20 @@
+/*!
+ * cNote 词法单元配色——围栏代码块与编辑器共用。
+ */
+
+.tok-comment { color: var(--tok-comm); font-style: italic; }
+.tok-string { color: var(--tok-str); }
+.tok-number { color: var(--tok-num); }
+.tok-keyword { color: var(--tok-key); }
+.tok-type { color: var(--tok-type); }
+.tok-literal { color: var(--tok-lit); }
+.tok-builtin { color: var(--tok-builtin); }
+.tok-function { color: var(--tok-fn); }
+.tok-variable { color: var(--tok-var); }
+.tok-property { color: var(--tok-prop); }
+.tok-tag { color: var(--tok-tag); }
+.tok-attr { color: var(--tok-attr); }
+.tok-punct { color: var(--tok-punct); }
+.tok-meta { color: var(--tok-meta); }
+.tok-inserted { color: var(--tok-ins); background: color-mix(in srgb, var(--tok-ins) 12%, transparent); display: inline-block; width: 100%; }
+.tok-deleted { color: var(--tok-del); background: color-mix(in srgb, var(--tok-del) 12%, transparent); display: inline-block; width: 100%; }

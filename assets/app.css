@@ -1,0 +1,1131 @@
+/*!
+ * cNote 应用界面框架。
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+/* 这些默认值只能声明在 :root 上。若同时声明在 `body` 上，就会遮蔽 applyConfig()
+   写到 <html> 上的内联值：自定义属性继承自最近的声明它的祖先元素，因此 body
+   的所有后代都会保留默认值，设置面板将完全失效。 */
+:root { --edit-size: 16px; --edit-line: 28px; --content-width: 900px; --gutter: 52px; }
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-sm { width: 13px; height: 13px; }
+
+/* -------------------------------------------------------------- 应用框架 */
+
+.app {
+  display: grid;
+  grid-template-rows: 40px minmax(0, 1fr) 26px;
+  height: 100vh;
+}
+
+/* --------------------------------------------------------------- 标题栏 */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 8px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+  z-index: 40;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px 0 4px;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+  color: var(--fg-mute);
+}
+
+/* 标志使用随程序发布的 logo 图，而不是替代用的字母，这样标题栏、可执行文件图标
+   和 README 呈现的是同一个形象。它以 20 CSS 像素从 128 像素的源图绘制，
+   在本应用本就需要支持的 125%–200% 缩放显示器上依然清晰。 */
+.brand .logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: none;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--fg) 18%, transparent);
+}
+
+.tb-drag { flex: 1; height: 100%; }
+
+.tb-actions { display: flex; align-items: center; gap: 2px; }
+
+/* 置顶按钮两侧的分隔线：它属于窗口控件，因此要与一侧的文档操作和另一侧的窗口
+   按钮区分开。 */
+.tb-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 5px;
+  flex: none;
+}
+
+/* 面板打开时，其按钮的高亮方式与视图切换器标记当前模式一致，
+   而不是采用工具栏那种平铺的强调色。 */
+.tb-actions .ibtn.is-on {
+  background: var(--bg-elev);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.ibtn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-mute);
+  width: 30px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  padding: 0;
+}
+
+.ibtn:hover { background: var(--bg-hover); color: var(--fg); }
+.ibtn:active { background: var(--bg-active); }
+.ibtn.is-on { background: var(--accent-soft); color: var(--accent); }
+.ibtn:disabled { opacity: 0.35; }
+
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  margin: 0 6px;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  color: var(--fg-mute);
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: default;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.segmented button:hover { color: var(--fg); }
+.segmented button.is-on {
+  background: var(--bg-elev);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.win-buttons { display: flex; align-items: stretch; height: 40px; margin-left: 4px; }
+
+.win-buttons button {
+  border: 0;
+  background: transparent;
+  color: var(--fg-mute);
+  width: 44px;
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.win-buttons button:hover { background: var(--bg-hover); color: var(--fg); }
+.win-buttons button.close:hover { background: #e5484d; color: #fff; }
+
+/* ------------------------------------------------------------------ 主体 */
+
+.body {
+  display: grid;
+  grid-template-columns: 46px auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.activity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-soft);
+}
+
+.activity .abtn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  border: 0;
+  background: transparent;
+  color: var(--fg-faint);
+  display: grid;
+  place-items: center;
+  cursor: default;
+  position: relative;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.activity .abtn:hover { background: var(--bg-hover); color: var(--fg); }
+.activity .abtn.is-on { color: var(--accent); background: var(--accent-soft); }
+.activity .abtn.is-on::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+
+.activity .spacer { flex: 1; }
+
+/* --------------------------------------------------------------- 侧边栏 */
+
+.sidebar {
+  width: 264px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: width var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  /* 让侧边栏独立绘制。否则任何重绘窗口其余部分的操作都会连带重绘这个面板——
+     而在查找结果之间跳转时，每敲一次键就要重绘编辑器好几次，当前行的半透明
+     高亮会明显闪烁。Electron 应用也是用同样的方式隔离侧边面板的。 */
+  contain: paint;
+}
+
+.sidebar.is-hidden { width: 0; opacity: 0; overflow: hidden; border-right-width: 0; }
+
+.panel { display: none; flex-direction: column; min-height: 0; height: 100%; }
+.panel.is-on { display: flex; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 10px 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+.panel-head .grow { flex: 1; }
+
+.panel-body { flex: 1; overflow: auto; padding: 0 8px 12px; min-height: 0; }
+
+.empty-hint {
+  padding: 26px 16px;
+  text-align: center;
+  color: var(--fg-faint);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* 大纲 */
+
+.outline-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--fg-mute);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 有意不加过渡：标记会从一行移到下一行，淡出淡入会让两行同时看起来处于选中
+     状态，观感上就是一次闪烁。文件树的活动行也是同样直接切换。 */
+}
+
+.outline-item:hover { background: var(--bg-hover); color: var(--fg); }
+/* 靠文字本身而非背景来体现——VNote 的大纲正是如此：它的“当前项”规则只有
+   `font-weight: bolder`。MarkText 的目录则完全不标记当前标题。两者都不会给
+   随输入实时更新的列表涂底色，也就没有会闪烁的东西；这里的底色正是闪烁的来源。
+   保留强调色，因为在中日韩文字上仅改变字重很难看出来。 */
+.outline-item.is-current { font-weight: bolder; color: var(--accent); }
+.outline-item[data-level="1"] { padding-left: 8px; font-weight: 600; }
+.outline-item[data-level="2"] { padding-left: 20px; }
+.outline-item[data-level="3"] { padding-left: 32px; }
+.outline-item[data-level="4"] { padding-left: 44px; }
+.outline-item[data-level="5"] { padding-left: 56px; }
+.outline-item[data-level="6"] { padding-left: 68px; }
+
+/* 文件树 */
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-mute);
+  font-size: 12.5px;
+  cursor: default;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.tree-row:hover { background: var(--bg-hover); color: var(--fg); }
+.tree-row.is-active { background: var(--accent-soft); color: var(--accent); }
+.tree-row .name { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.tree-row .chev { transition: transform var(--dur) var(--ease); color: var(--fg-faint); }
+.tree-row .chev.is-open { transform: rotate(90deg); }
+.tree-children { margin-left: 10px; border-left: 1px solid var(--border-soft); padding-left: 4px; }
+
+.tree-root {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  color: var(--fg-faint);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.tree-root .path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+.tree-root { cursor: pointer; }
+.tree-root .root-remove {
+  width: 20px;
+  height: 18px;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.tree-root:hover .root-remove { opacity: .65; }
+.tree-root .root-remove:hover { opacity: 1; }
+
+.search-head {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  letter-spacing: .3px;
+  color: var(--fg-faint);
+}
+
+/* 文件面板搜索 */
+
+.tree-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 8px 6px;
+  padding: 0 7px;
+  height: 26px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  color: var(--fg-faint);
+}
+
+.tree-search:focus-within { border-color: var(--accent); color: var(--accent); }
+.tree-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+}
+.tree-search input::placeholder { color: var(--fg-faint); }
+
+.tree-row .sub {
+  font-size: 10.5px;
+  color: var(--fg-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 45%;
+}
+
+/* 最近打开 */
+
+.recent-head {
+  padding: 14px 8px 4px;
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  font-weight: 600;
+}
+
+.recent-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.recent-item:hover { background: var(--bg-hover); }
+.recent-item .title { font-size: 12.5px; color: var(--fg); }
+.recent-item .sub { font-size: 11px; color: var(--fg-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 设置 */
+
+.field { padding: 8px 8px 10px; }
+.field label { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--fg-mute); margin-bottom: 6px; }
+.field .value { color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+
+/* 滑轨在这里自行绘制，而不是交给原生控件，这样已填充部分是一整条平整的色带：
+   没有边框，两半相接处也没有接缝。`--range-fill` 由设置相关的代码持续更新。 */
+.field input[type="range"] {
+  width: 100%;
+  height: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+}
+
+.field input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(to right,
+    var(--accent) 0 var(--range-fill, 0%),
+    var(--bg-sunken) var(--range-fill, 0%) 100%);
+}
+
+.field input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.field select, .field input[type="text"] {
+  width: 100%;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--fg);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 7px;
+  outline: none;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 8px;
+  font-size: 12.5px;
+  color: var(--fg-mute);
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.switch-row:hover { background: var(--bg-hover); }
+
+.switch {
+  width: 34px;
+  height: 19px;
+  border-radius: 99px;
+  background: var(--bg-active);
+  position: relative;
+  transition: background var(--dur) var(--ease);
+  flex: none;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-elev);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform var(--dur) var(--ease);
+}
+
+.switch-row.is-on .switch { background: var(--accent); }
+.switch-row.is-on .switch::after { transform: translateX(15px); }
+
+/* ------------------------------------------------------------------ 主区 */
+
+.main {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+  position: relative;
+}
+
+/* 标签页 */
+
+.tabbar {
+  display: flex;
+  align-items: stretch;
+  /* 网格项默认是 `min-width: auto`，因此这条栏不肯缩到内容宽度以下，
+     标签行一旦溢出，新建标签和标签列表按钮就被挤出了右边缘。 */
+  min-width: 0;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px 6px 0;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar { height: 0; }
+
+/* 所有已打开笔记的列表，固定在滚动区之外，这样标签超出右边缘后依然点得到。 */
+.tab-all {
+  width: 26px;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-faint);
+  align-self: center;
+  height: 26px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  margin: 0 6px 2px 2px;
+}
+
+.tab-all:hover { background: var(--bg-hover); color: var(--fg); }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 11px;
+  height: 30px;
+  /* 短文件名保持舒适的宽度，而不是紧贴文字；长文件名仍在 renderTabs 设定的
+     上限处省略。 */
+  min-width: 120px;
+  /* 打开的笔记越多，上限越小（由 renderTabs 设置 --tab-max），
+     这样标签行在三个长文件名之后仍能正常使用，而不会开始滚动。 */
+  max-width: var(--tab-max, 330px);
+  border-radius: 8px 8px 0 0;
+  color: var(--fg-mute);
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: default;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  position: relative;
+}
+
+.tab:hover { background: var(--bg-hover); }
+.tab.is-active { background: var(--bg-elev); color: var(--fg); }
+.tab.is-active::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab .label {
+  /* 占据较宽标签页空出的空间并让名称居中，同时也把关闭按钮推到标签页末端。 */
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.tab .close {
+  width: 17px; height: 17px; border-radius: 4px; border: 0; background: transparent;
+  color: inherit; display: grid; place-items: center; padding: 0; flex: none; opacity: 0.6;
+}
+.tab .close:hover { background: var(--bg-active); opacity: 1; }
+
+.tab-new {
+  /* 固定在标签列表旁边而不是其中：标签行本身会滚动，放在里面的按钮在标签溢出时
+     会跑到右边缘之外。 */
+  width: 28px; height: 28px; margin: 0 0 2px 4px; border: 0; background: transparent;
+  color: var(--fg-faint); border-radius: 7px; display: grid; place-items: center;
+  flex: none; align-self: center;
+}
+.tab-new:hover { background: var(--bg-hover); color: var(--fg); }
+
+/* 工具栏 */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 8px;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.toolbar::-webkit-scrollbar { height: 0; }
+
+.toolbar .ibtn { width: 28px; height: 26px; border-radius: 6px; flex: none; }
+
+.toolbar .sep { width: 1px; height: 16px; background: var(--border); margin: 0 5px; flex: none; }
+.toolbar .grow { flex: 1; }
+
+/* 窗格 */
+
+.panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6px minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  background: var(--bg);
+}
+
+html[data-mode="edit"] .panes { grid-template-columns: minmax(0, 1fr); }
+html[data-mode="edit"] .preview-pane,
+html[data-mode="edit"] .splitter { display: none; }
+
+html[data-mode="read"] .panes { grid-template-columns: minmax(0, 1fr); }
+html[data-mode="read"] .editor-pane,
+html[data-mode="read"] .splitter { display: none; }
+
+.pane { min-width: 0; min-height: 0; overflow: hidden; position: relative; background: var(--paper); }
+
+.editor-pane { border-right: 1px solid var(--border-soft); }
+html[data-mode="edit"] .editor-pane { border-right: 0; }
+
+.splitter { cursor: col-resize; background: var(--bg); position: relative; z-index: 5; }
+.splitter::after {
+  content: "";
+  position: absolute;
+  inset: 0 2px;
+  border-radius: 2px;
+  transition: background var(--dur) var(--ease);
+}
+.splitter:hover::after, .splitter.is-dragging::after { background: var(--accent-line); }
+
+.scroll {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  /* 关闭滚动锚定。否则视口上方内容高度变化时，Chromium 会自行调整 `scrollTop`
+     ——预览每次重绘都会重写它的占位 div，编辑器也会把折叠的行换成真实行——
+     而这些调整产生的滚动事件与用户滚动完全一样。两个窗格各自维护锚点
+     （参见分栏同步），因此不能让浏览器再插一脚。 */
+  overflow-anchor: none;
+  /* 永久预留滚动条轨道。否则编辑器自动增高的测量本身会切换滚动条的显隐，
+     使折行宽度变化约 11px，折行行数随之改变——高度最终会稳定在一个稳定但
+     错误的值上，少一行。 */
+  scrollbar-gutter: stable;
+}
+
+/* 编辑器 */
+
+.page {
+  position: relative;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* 编辑区把原始 Markdown 作为文本承载，上面叠加装饰用的行内元素，因此
+   element.textContent 始终精确等于文档内容，光标也是这些节点中真实的 DOM
+   光标。不存在第二套布局，也就不会与第一套产生偏差。 */
+#editor {
+  font-family: var(--font-editor, var(--font-mono));
+  font-size: var(--edit-size);
+  line-height: var(--edit-line);
+  letter-spacing: 0;
+  tab-size: 4;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  padding: 30px 34px 46vh 34px;
+  margin: 0;
+  border: 0;
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  color: var(--fg);
+  caret-color: var(--accent);
+  outline: none;
+}
+
+html[data-gutter="1"] #editor { padding-left: var(--gutter); }
+
+#editor::selection { background: var(--selection); }
+
+/* 行号只是装饰：它们绝不能进入 textContent，因此用 ::before 绘制而不是真实
+   内容。数字本身来自 CSS 计数器而非 data 属性：在增量重绘下，否则插入一行会
+   让它下面所有行号都停留在旧值，直到下一次完整渲染。 */
+#editor .line { display: inline; }
+
+#editor .line::before {
+  counter-increment: mn-line;
+  content: counter(mn-line);
+  display: inline-block;
+  width: calc(var(--gutter) - 20px);
+  margin-left: calc(-1 * (var(--gutter) - 20px));
+  text-align: right;
+  color: var(--fg-faint);
+  opacity: 0.55;
+  user-select: none;
+}
+
+#editor { counter-reset: mn-line; }
+
+/* 视口窗口化（参见装饰相关代码）。
+
+   `content-visibility: auto` 让引擎跳过屏幕外文本的布局与绘制，
+   `contain-intrinsic-size: auto` 则保留上次测量到的高度，使滚动条不会跳动。
+   这些元素仍留在 DOM 中，因此 textContent、全选和复制依然能看到整个文档。 */
+#editor .entry-fold {
+  display: block;
+  content-visibility: auto;
+}
+
+#editor .entry-window { display: block; }
+
+html[data-gutter="0"] #editor .line::before { display: none; }
+
+/* 编辑器词法单元配色 */
+#editor .md-h { color: var(--accent); font-weight: 600; }
+#editor .md-em { font-style: italic; color: color-mix(in srgb, var(--fg) 82%, var(--paper)); }
+#editor .md-strong { font-weight: 700; color: var(--fg); }
+#editor .md-strike { text-decoration: line-through; color: var(--fg-faint); }
+#editor .md-mark { background: color-mix(in srgb, var(--mark-bg) 45%, transparent); border-radius: 3px; }
+#editor .md-codetic { color: var(--tok-str); background: var(--code-bg); border-radius: 3px; }
+#editor .md-quote { color: var(--fg-mute); }
+#editor .md-marker { color: var(--tok-key); }
+#editor .md-link { color: var(--tok-type); }
+#editor .md-url { color: var(--tok-comm); }
+#editor .md-math { color: var(--tok-var); }
+#editor .md-html { color: var(--fg-faint); }
+#editor .md-fence { color: var(--tok-comm); }
+
+/* 查找结果由编辑器以 .md-hit 输出；没有这条规则时，命中项虽然被选中却从不显示，
+   让搜索看起来毫无作用。 */
+#editor .md-hit {
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+  border-radius: 2px;
+}
+
+/* 查找栏当前停留的命中项。其他命中项刻意保持低调；这一项必须压过编辑器自身的
+   选区高亮（后者绘制在背景之上），所以用的是更强的强度，而不是另一种色相。 */
+#editor .md-hit.is-current {
+  background: color-mix(in srgb, var(--accent) 78%, transparent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* ---------------------------------------------------------------- 预览 */
+
+.preview-scroll { padding: 30px 0 46vh; }
+
+/* 长文档：让引擎跳过屏幕外预览块的布局与绘制（MDN：content-visibility
+   “使用户代理可以跳过元素的渲染工作，包括布局和绘制，直到需要时才进行”），
+   并记住每个块上次测量到的高度。1.5 MB 的预览，布局耗时从约 1.2 秒降到几毫秒。 */
+#preview.is-long > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
+}
+
+/* 为预览尚未绘制的块保留滚动范围：已绘制区域上下各保留一个占位元素，
+   其高度等于它们所代表的全部内容的估算或实测高度。用两个元素代替每个块一个
+   占位元素。 */
+#preview > .md-spacer {
+  display: block;
+  content-visibility: visible;
+}
+
+/* 打印时必须看到每一个块：被跳过的块会打印成空白。 */
+@media print {
+  #preview.is-long > * { content-visibility: visible; }
+}
+
+.md {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 34px;
+  font-family: var(--font-read);
+  font-size: var(--edit-size);
+  line-height: var(--edit-line);
+  color: var(--fg);
+  user-select: text;
+  cursor: auto;
+  overflow-wrap: break-word;
+}
+
+/* --------------------------------------------------------------- 状态栏 */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  font-size: 11.5px;
+  color: var(--fg-faint);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-soft);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.statusbar .grow { flex: 1; }
+.statusbar .item { display: flex; align-items: center; gap: 4px; }
+.statusbar .clickable { padding: 2px 6px; border-radius: 5px; cursor: default; }
+.statusbar .clickable:hover { background: var(--bg-hover); color: var(--fg); }
+
+/* ---------------------------------------------------------------- 浮层 */
+
+.findbar {
+  position: absolute;
+  top: 8px;
+  right: 20px;
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 6px;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  /* 查找栏浮在文字之上，因此当它挡住命中项时可以拖到一旁；
+     输入框和按钮仍保留各自的鼠标指针样式。 */
+  cursor: move;
+}
+
+.findbar.is-on { display: flex; }
+.findbar.is-dragging { user-select: none; }
+
+/* 每行一张卡片：两行输入框彼此对齐，每一行看起来都是一个整体控件，
+   而不是一堆零散的小部件。 */
+.find-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+}
+
+.findbar input {
+  font: inherit;
+  font-size: 12.5px;
+  cursor: text;
+  flex: 1 1 170px;
+  min-width: 0;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  outline: none;
+}
+
+.findbar input:focus { border-color: var(--accent-line); }
+/* 提示文字只是标明字段用途，不是要读的内容，因此它们的颜色比输入框中的值淡得多。 */
+.findbar input::placeholder { color: var(--fg-mute); opacity: 0.3; }
+.findbar .count { font-size: 11.5px; color: var(--fg-faint); min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.popover {
+  position: absolute;
+  z-index: 60;
+  display: none;
+  padding: 6px;
+  min-width: 200px;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.popover.is-on { display: block; }
+
+.popover .group-label {
+  padding: 7px 9px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+.theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 4px; }
+
+.theme-swatch {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 4px 5px;
+  background: transparent;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.theme-swatch:hover { background: var(--bg-hover); }
+/* 与面板颜色混合，而不是保持半透明：在深色主题上，16% 的强调色几乎看不见，
+   被选中的色块看上去像没被选中。 */
+.theme-swatch.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg-elev));
+}
+.theme-swatch .dots { display: flex; gap: 2px; }
+.theme-swatch .dots i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+.theme-swatch span { font-size: 10.5px; color: var(--fg-mute); }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: default;
+}
+
+.menu-item:hover { background: var(--accent-soft); color: var(--accent); }
+.menu-item .shortcut { margin-left: auto; color: var(--fg-faint); font-size: 11px; }
+.menu-sep { height: 1px; margin: 5px 6px; background: var(--border-soft); }
+
+.ctxmenu {
+  position: fixed;
+  z-index: 90;
+  display: none;
+  padding: 5px;
+  min-width: 190px;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.ctxmenu.is-on { display: block; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #000 42%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.modal-backdrop.is-on { display: flex; }
+
+.modal {
+  width: min(680px, calc(100vw - 60px));
+  max-height: min(76vh, 760px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.modal-head .grow { flex: 1; }
+.modal-body { padding: 12px 18px 20px; overflow: auto; }
+
+.shortcut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 22px; }
+
+/* 版本与作者，位于快捷键说明的末尾——也是窗口中标出它们的唯一位置。 */
+.about-line {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 11.5px;
+  color: var(--fg-faint, #9a9a9a);
+}
+.shortcut-row { display: flex; align-items: center; gap: 10px; padding: 5px 2px; font-size: 12.5px; color: var(--fg-mute); }
+.shortcut-row .keys { margin-left: auto; display: flex; gap: 4px; }
+
+kbd {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
+  color: var(--fg-mute);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 44px;
+  transform: translate(-50%, 12px);
+  z-index: 120;
+  padding: 8px 16px;
+  border-radius: 99px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  color: var(--fg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.toast.is-error { border-color: var(--danger); color: var(--danger); }
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px 18px 16px;
+}
+
+.dialog-actions button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--fg);
+  cursor: default;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              color var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+.dialog-actions button:hover { background: var(--bg-hover); }
+
+.dialog-actions button.is-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.dialog-actions button.is-primary:hover { filter: brightness(1.08); }
+
+.dialog-actions button.is-danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.dialog-actions button.is-danger:hover {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+/* ------------------------------------------------------------ 专注模式 */
+
+/* 隐藏整行，而不是行内的条带：专注模式下 `.main` 只有一行，若标签栏还留着，
+   它就会占掉这一行，把文档挤进它后面一个高度为零的隐式行里。 */
+.app.is-focus .activity,
+.app.is-focus .sidebar,
+.app.is-focus .toolbar,
+.app.is-focus .tabbar { display: none; }
+
+/* 只留文字：带按钮的窗口框架和状态栏也一并隐藏。无论哪种情况，窗口都保留调整
+   大小的边框——那些由原生命中测试负责，不在这个界面层里。 */
+.app.is-focus .titlebar,
+.app.is-focus .statusbar { display: none; }
+
+/* 隐藏的行不会留下网格项，因此整个框架的三行必须合并成一行，
+   否则 `.body` 会落在标题栏留下的那 40px 行里。 */
+.app.is-focus { grid-template-rows: minmax(0, 1fr); }
+.app.is-focus .body { grid-template-columns: minmax(0, 1fr); }
+.app.is-focus .main { grid-template-rows: minmax(0, 1fr); }
+
+@media (max-width: 820px) {
+  .sidebar { width: 216px; }
+  .brand span { display: none; }
+}
+
+@media (max-width: 1120px) {
+  .segmented button { padding: 3px 7px; }
+}

@@ -1,0 +1,246 @@
+/*!
+ * cNote 主题。每个主题只定义一小组调色板变量，其余色阶都由 color-mix()
+ * 推导而来，因此新增一个主题只需约 20 行代码。
+ */
+
+:root {
+  --radius-lg: 12px;
+  --radius: 9px;
+  --radius-sm: 6px;
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --font-read: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Source Han Sans SC", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "JetBrains Mono", "Consolas", "Microsoft YaHei Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 0.16s;
+}
+
+/* ---------------------------------------------------------------- 调色板 */
+
+html[data-theme="paper"] {
+  --is-dark: 0;
+  --bg: #efece5;
+  --bg-panel: #f4f1ea;
+  --bg-elev: #fbfaf6;
+  --paper: #fdfcf9;
+  --border: #ddd7ca;
+  --fg: #33302b;
+  --fg-mute: #736d63;
+  --fg-faint: #a49c8e;
+  --accent: #b07d2b;
+  --accent-fg: #ffffff;
+  --code-bg: #f2efe6;
+  --mark-bg: #ffe9a8;
+  --shadow: 0 12px 32px rgba(80, 66, 40, 0.16);
+}
+
+html[data-theme="github"] {
+  --is-dark: 0;
+  --bg: #f0f1f3;
+  --bg-panel: #f6f7f9;
+  --bg-elev: #ffffff;
+  --paper: #ffffff;
+  --border: #d8dce1;
+  --fg: #1f2328;
+  --fg-mute: #5d6672;
+  --fg-faint: #9099a4;
+  --accent: #2f6feb;
+  --accent-fg: #ffffff;
+  --code-bg: #f4f6f8;
+  --mark-bg: #fff3b0;
+  --shadow: 0 12px 32px rgba(31, 35, 40, 0.14);
+}
+
+html[data-theme="solar"] {
+  --is-dark: 0;
+  --bg: #eef1e8;
+  --bg-panel: #f3f5ee;
+  --bg-elev: #fbfcf7;
+  --paper: #fdfcf5;
+  --border: #d5dccb;
+  --fg: #3c4a45;
+  --fg-mute: #6b7c74;
+  --fg-faint: #9aa89f;
+  --accent: #1f8a70;
+  --accent-fg: #ffffff;
+  --code-bg: #eef1e6;
+  --mark-bg: #ecdc9c;
+  --shadow: 0 12px 32px rgba(40, 60, 50, 0.14);
+}
+
+html[data-theme="sepia"] {
+  --is-dark: 0;
+  --bg: #e7dcc6;
+  --bg-panel: #ede4d2;
+  --bg-elev: #f8f1e3;
+  --paper: #faf4e8;
+  --border: #d5c6a9;
+  --fg: #43382a;
+  --fg-mute: #7c6b52;
+  --fg-faint: #a8977c;
+  --accent: #a4622f;
+  --accent-fg: #fffaf2;
+  --code-bg: #f0e7d4;
+  --mark-bg: #f2d98d;
+  --shadow: 0 12px 32px rgba(90, 70, 40, 0.18);
+}
+
+html[data-theme="night"] {
+  --is-dark: 1;
+  --bg: #191a1f;
+  --bg-panel: #1e2026;
+  --bg-elev: #262931;
+  --paper: #1c1e24;
+  --border: #31343d;
+  --fg: #d7dae0;
+  --fg-mute: #939aa7;
+  --fg-faint: #666d7a;
+  --accent: #6ea8fe;
+  --accent-fg: #10131a;
+  --code-bg: #23262e;
+  --mark-bg: #6b5a1f;
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="ink"] {
+  --is-dark: 1;
+  --bg: #121212;
+  --bg-panel: #171717;
+  --bg-elev: #202020;
+  --paper: #151515;
+  --border: #2b2b2b;
+  --fg: #dedede;
+  --fg-mute: #9a9a9a;
+  --fg-faint: #6a6a6a;
+  --accent: #d8a657;
+  --accent-fg: #181818;
+  --code-bg: #1d1d1d;
+  --mark-bg: #5b4a22;
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="nord"] {
+  --is-dark: 1;
+  --bg: #2b303b;
+  --bg-panel: #2f3542;
+  --bg-elev: #39404f;
+  --paper: #2e3440;
+  --border: #414a5c;
+  --fg: #dfe4ee;
+  --fg-mute: #a5aec0;
+  --fg-faint: #76808f;
+  --accent: #88c0d0;
+  --accent-fg: #21262f;
+  --code-bg: #333a47;
+  --mark-bg: #5c6b4a;
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+}
+
+html[data-theme="mocha"] {
+  --is-dark: 1;
+  --bg: #1e1e2e;
+  --bg-panel: #232336;
+  --bg-elev: #2c2c42;
+  --paper: #222234;
+  --border: #363654;
+  --fg: #dcdcef;
+  --fg-mute: #9d9dbb;
+  --fg-faint: #6f6f92;
+  --accent: #cba6f7;
+  --accent-fg: #1b1b2b;
+  --code-bg: #292940;
+  --mark-bg: #5c4a7a;
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------------- 派生颜色 */
+
+html {
+  --bg-hover: color-mix(in srgb, var(--fg) 7%, transparent);
+  --bg-active: color-mix(in srgb, var(--fg) 12%, transparent);
+  --bg-sunken: color-mix(in srgb, var(--fg) 5%, transparent);
+  --border-soft: color-mix(in srgb, var(--border) 55%, transparent);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 42%, transparent);
+  --selection: color-mix(in srgb, var(--accent) 26%, transparent);
+  --danger: color-mix(in srgb, #e5484d 88%, var(--fg));
+  --ok: color-mix(in srgb, #30a46c 88%, var(--fg));
+  --scroll-thumb: color-mix(in srgb, var(--fg) 22%, transparent);
+  --scroll-thumb-hover: color-mix(in srgb, var(--fg) 36%, transparent);
+}
+
+/* ----------------------------------------------------------- 语法高亮颜色 */
+
+html {
+  --tok-comm: color-mix(in srgb, var(--fg-faint) 92%, var(--paper));
+  --tok-str: color-mix(in srgb, #2f9e6e 88%, var(--fg));
+  --tok-num: color-mix(in srgb, #c26a2c 90%, var(--fg));
+  --tok-key: color-mix(in srgb, #a3529c 88%, var(--fg));
+  --tok-type: color-mix(in srgb, #2d78c4 86%, var(--fg));
+  --tok-lit: color-mix(in srgb, #b3762a 88%, var(--fg));
+  --tok-fn: color-mix(in srgb, #3a7bd5 84%, var(--fg));
+  --tok-builtin: color-mix(in srgb, #178f96 86%, var(--fg));
+  --tok-var: color-mix(in srgb, #b1553f 86%, var(--fg));
+  --tok-prop: color-mix(in srgb, #2f6f9e 84%, var(--fg));
+  --tok-tag: color-mix(in srgb, #c0453f 86%, var(--fg));
+  --tok-attr: color-mix(in srgb, #b3762a 86%, var(--fg));
+  --tok-punct: color-mix(in srgb, var(--fg) 62%, var(--paper));
+  --tok-meta: color-mix(in srgb, var(--accent) 80%, var(--fg));
+  --tok-ins: color-mix(in srgb, #2f9e6e 90%, var(--fg));
+  --tok-del: color-mix(in srgb, #d0454a 88%, var(--fg));
+}
+
+html[data-theme="night"] {
+  --tok-str: #9edc92;
+  --tok-num: #e8b16c;
+  --tok-key: #d79bdd;
+  --tok-type: #7db8f0;
+  --tok-lit: #e6b877;
+  --tok-fn: #8ec1f5;
+  --tok-builtin: #79d1cf;
+  --tok-var: #eb9d86;
+  --tok-prop: #8fc7ea;
+  --tok-tag: #f08b83;
+  --tok-attr: #e6c07b;
+}
+
+html[data-theme="ink"] {
+  --tok-str: #a9d18a;
+  --tok-num: #e0b070;
+  --tok-key: #cf9fdd;
+  --tok-type: #8ab4f8;
+  --tok-lit: #dcb16f;
+  --tok-fn: #9cc2f7;
+  --tok-builtin: #7fc9c4;
+  --tok-var: #e39c85;
+  --tok-prop: #93c6e8;
+  --tok-tag: #e78c84;
+  --tok-attr: #dcb27a;
+}
+
+html[data-theme="nord"] {
+  --tok-str: #a3be8c;
+  --tok-num: #ebcb8b;
+  --tok-key: #b48ead;
+  --tok-type: #8fbcbb;
+  --tok-lit: #ebcb8b;
+  --tok-fn: #88c0d0;
+  --tok-builtin: #8fbcbb;
+  --tok-var: #d08770;
+  --tok-prop: #8fbcbb;
+  --tok-tag: #bf616a;
+  --tok-attr: #ebcb8b;
+}
+
+html[data-theme="mocha"] {
+  --tok-str: #a6e3a1;
+  --tok-num: #fab387;
+  --tok-key: #cba6f7;
+  --tok-type: #89b4fa;
+  --tok-lit: #f9e2af;
+  --tok-fn: #89b4fa;
+  --tok-builtin: #94e2d5;
+  --tok-var: #eba0ac;
+  --tok-prop: #89dceb;
+  --tok-tag: #f38ba8;
+  --tok-attr: #f9e2af;
+}

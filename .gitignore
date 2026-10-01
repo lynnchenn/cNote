@@ -1,0 +1,19 @@
+# 构建产物：编译器的工作目录及其目标文件。
+build-msvc/
+*.obj
+*.res
+
+# tools/gen-assets.ps1 写入 src/ 并嵌入可执行文件的前端打包结果。
+# 每次构建都会重新生成；请勿手工编辑。
+src/assets.generated.h
+
+# 可选的压缩器（`npm install --prefix tools esbuild`）。没有它也能构建，
+# 只是可执行文件会大一些。
+tools/node_modules/
+tools/package.json
+tools/package-lock.json
+
+# 应用运行时写在自己可执行文件旁边的文件。
+cNote.config.json
+cNote.log
+cNote.data/
